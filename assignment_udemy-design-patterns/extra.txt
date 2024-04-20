@@ -1,0 +1,11 @@
+Some good questions I am getting answered from chatGPT - knowledge growth
+
+Q. so what would happen if the base object is not able to call the constructor of parent class?
+
+ChatGPT
+If a subclass is unable to call the constructor of its parent class, it would result in a compilation error. In Java, every constructor of a subclass must call a constructor of its direct superclass as the first statement. This is achieved using the super() keyword.
+Here's why failing to call the constructor of the parent class would cause an issue:
+Constructor Chaining: In Java, when you create an object of a subclass, the constructor of the superclass is invoked implicitly before the constructor of the subclass. This process is known as constructor chaining. If the subclass constructor doesn't explicitly call a constructor of the superclass using super(), the compiler will automatically insert a call to the superclass's no-argument constructor (super() with no arguments).
+Implicit super() Call: If the superclass doesn't have a no-argument constructor, or if it's not accessible (e.g., it's private), the compiler will generate an error because it can't find a suitable superclass constructor to call.
+Compilation Error: The error message typically indicates that there is no default constructor available in the superclass or that the constructor is not visible due to its access modifier (e.g., private).
+To fix this issue, you must ensure that every constructor of the subclass explicitly calls a constructor of its direct superclass using super(). If the superclass doesn't have a no-argument constructor, you'll need to call one of its parameterized constructors explicitly using super(...), passing the required arguments. Alternatively, you could change the access modifier of the superclass constructor to make it accessible to the subclass.

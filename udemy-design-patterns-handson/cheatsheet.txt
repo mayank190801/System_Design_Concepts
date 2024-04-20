@@ -1,0 +1,370 @@
+SOLID Design
+
+S -> Single Responsibility Principle
+O -> Open closed Principle
+L -> Liskov Substitution Principle
+I -> Interface Segregation Principle
+D -> Dependency Inversion Principle
+
+SINGLE RESPONSIBILITY PRINCIPLE -- (based on dividing one class into multiple ones)
+There should never be more than one reason for a class to change -
+focused, single functionality
+addresses a specific concern
+
+--- so basically each class should have one resposibility -- if more than one, than divide into multiple classes and improve the design
+--- In the example, we have moved the logic for validating and storing from the controller class to different classes
+
+OPEN CLOSED PRINCIPLE -- (based on inheritance entirely)
+Software entities should be open for extension, but closed for modification
+Open for extension - Extend the existing behaviour
+Closed for modification - Existing code should not be changed
+
+--- To avoid modifying existing base classes, and using override and inheritance in order to extend the functionality
+--- So basically extract out the common part from different classes, create one base abstract class which is closed for modification
+and add abstract functions inside it for extension among child classes,
+also use protected members to access the base class members in child classes
+
+LISKOV SUBSTITUTION PRINCIPLE -- (those who do not have same behaviour should not inherit each other)
+We should be able to substitute base class objects with child class objects & this should not alter the behavior of program
+
+--- Why modifying behaviour of base classes is dangerous, because we normally think every square is a rectangle, but in reality it is not like
+They both have difference in behaviour how they setWidth, setHeight and hence square should not be a child of rectangle
+Alternatively we should have a shape class - which have only one function - to compute area - and then rectangle and square should be child of shape class
+This way we would know the only thing they both will have is a function to compute area & nothing else
+
+INTERFACE SEGREGATION PRINCIPLE
+Clients should not be forced to depend upon interfaces that they do not use - (interface pollution)
+large interfaces - nope
+unrelated methods - nope
+Write highly cohesive interfaces -- please!!
+
+-- Interface Pollution
+-> Classes have empty method implementations
+-> Method implementations throw UnsupportedOperationException
+-> Methods implementation return null or default/dummy values
+
+--- In the example, someone created an interface from the given service class, and added functions which were specific to that service class
+--- Now when other person created a service using that interface, he had to implement all the functions of that interface, even though he did not need them
+--- Hence only keep the functions that are shared among all in the interface, and add your own functions later on in the service
+
+DEPENDENCY INVERSION PRINCIPLE
+A. High level modules should not depend on low level modules, both should depend upon Abstractions
+B. Abstractions should not depend on details, rather details should depend upon abstractions
+
+--- Dependency ?
+-> When some code is tighlty dependent on other class - (business logic)
+-> Rather use interfaces/abstractions in the place of that class, so that anyone can easily change the implementation
+by creating a new class and it won't be affecting our code
+-> It is said inversion because earlier the responsibility of creating the object was ours, now it is of client - hence dependency inversion
+
+--- Ex -
+public void writeReport(){
+Report report = new Report();
+//Build the report
+JsonFormatter formatter = new JsonFormatter();
+String report = formatter.format(report);
+FileWrite writer = new FileWriter("report.json")
+//write out report
+}
+
+Do this instead - get implemented object from user of this function only
+public void writeReport(Formatter formatter, Writer writer){
+Report report = new Report();
+//Build the report
+String report = formatter.format(report);
+writer.write("report.json")
+//write out report
+}
+
+-- DESIGN PATTERN INTRODUCTION --
+
+Creational --- creational patterns deal with the process of creation of object of classes
+Structural --- structural patterns deal with the composition/arranged of classes or objects
+Behavioural --- behavioural patterns deal with the interaction/communicate between classes and objects
+
+Creational
+Builder
+Simple Factory
+Factory Method
+Prototype
+Singleton
+Abstract Factory
+Object Pool
+
+BUILDER DESIGN PATTERN
+
+//Product instances are immutable -
+//Problem - 1 (Too many arguments in constructor)
+class Product {
+
+public Product(int weight, double price, int shipVolumne, int shipCode){
+//init
+
+}
+
+//other code
+}
+
+//Problem - 2 (Objects that need other objects or "parts" to construct them.
+class Address {
+public Address(String houseNumber, String street, ...){
+//init
+}
+}
+
+class User {
+public User(String name, Address address, ...){
+//init
+}
+}
+
+--> Whenever we have a complex process to construct an object involing multiple steps, then builder design pattern can help us
+--> In builder we remove the logic related to object construction from "client" code & abstract it in separate class
+
+--> UML -- pretty complex
+
+IMPLEMENT A BUILDER
+--> We start by creating a builder
+--> Identify the "parts" of the product & provide methods to create those parts
+--> It should provide a method to "assemble" or build the product/object
+--> It must provide a way/method to get fully built object out. Optionally builder can keep reference to an
+product it has built so the same class be returned again in future
+--> A director can be a seperated class or client can play the role of director
+
+Example -- implemented in 2 ways
+-- Basically create Builder Interface, Product Interface, then both of their implementation
+In those Builder will take the data from you in single go, and store it, then you can call the build function
+This way you can get the object of the product implementation and you are good to go -- code you can refer if you want to
+-- Second is bascially you have builder as a public static inner class and in there you do the same operations
+Also you can get the object from static function only - new builder everytime - give your info and simply build - best strategy to use
+
+Implementation Considerations -
+--- You can easily create an immutable claass by implementing builder as an inner static class. You'll find this type of implementation
+Quite frequently even if immutability is not an concern. (ALWAYS PREFFERED METHOD)
+--- The director role is rarely implemented as a seperate class, typically the consumer of the object instance or client handles that role
+--- Abstract builder is also not required if "product" itself is not part of any inheritance hierarchy. You can directly create concrete builder
+--- "To many constructor argument" -- might be the best scenario to use this bad boy
+
+Real world Example -
+--- Stringbuilder is not 100% but real world example of builder design pattern
+--- Calender.build is a great example of it as well
+
+PitFalls
+--- A litlle bit complex for new comers mainly because of "method chaining" where builder method return builder object itself
+--- If user code has only set few properties, but our builder requires more than that, and someone calls build!! - then simple throw some exception
+Additional handling you might have to do
+
+Simple Factory - (not considered as a design pattern)
+-- Simply a method that encapsulates object instantiation. Nothing else complex is going on
+-- often confused with "Factory Method" pattern
+
+Implementation
+-- Simply create PostFactory which have a function static - asks for String type and returns POST abstract
+-- In that according to the type return the implementation of Post Abstract class and if not throw error - not available
+-- Can just be a method existing in your class. Adding a seperate class however makes it easier for everyone to use it
+-- No state required, hence only static method is there
+
+Real World Example
+-- java.text.NumberFormat class file -
+
+Pitfalls
+-- If too complex, think about using Factory Method Design Pattern
+
+FACTORY METHOD DESIGN PATTERN
+-- When we want to move the object creation logic from our code to a seperate subclass
+-- We use this pattern when we do not know in advance which class we may need to instantiate beforehand & also to allow new classes
+to be added to the system and handle their creation without affecting client code.
+-- It is primarily used to isolate client code from object creation & delegate object creation to subclasses.
+
+Implementation Steps
+-- We will start by creating a class for our creator
+-- Creator itself can be concrete if it can provide a default object or it can be completely abstract
+-- Implementations will override the method and return an concrete object
+
+Implementation
+-- Creator heirarchy in factory method design pattern reflects the product heirarchy. We typically end up with a concrete creator per
+object type.
+-- Template Method Design Pattern and Abstract factory design pattern also use this
+-- Most defining factor is that subclasses are "providing the actual instance"
+-- Role of subclasses to provide an actual implementation
+
+Pitfalls
+-- More complex to implement (more classes and involved unit testing)
+-- Have to start from the beginning only. Not easy to refractor code
+-- Forces you to create subclass just to match product heirarchy
+
+BENEFITS
+-- using this you do not have to refractor previously written code, like you do in simple factory
+-- in this you simply create a new factory implementation, @override the method, and you are good to go!!!! - no change in factory class itself
+
+PROTOTYPE DESIGN PATTERN
+-- We have a complex object that is costly to create. To create more instances of such class, we use an existing class as our prototype
+-- It allows to us to make copies of existing objects & saves us from having to create objects from scratch
+
+Implementations Steps
+-- We start by creating our class which will be a prototype
+-- The class must implement a cloneable interface
+-- class should override clone method and return copy of itself
+-- The method should declare cloneNotSupportedException in throws clause to give subclasses chance to decide on whether to support cloning
+
+
+Implementation Considerations
+-- Pay attention to deep copy or shallow copy. Immutable fields on clones saves the trouble of deep copy (VERY SMART THING WHY???)
+BECAUSE - the new object (cloned object) will be pointing to exact same field present in previous object, and even though both are pointing at same field
+Since it is immutable, it will remain consistent for next upcoming centuries.
+-- Make sure to reset the mutable state of object before returning the prototype. It's a good idea to implement this in method to allow
+subclasses to init themselves as well. (reset bhai reset)
+-- Clone method is protected in Object class, and must be overriden to be public to be used outside from that class.
+-- Cloneable is a "marker" interface, an indication that class supports cloning!!!!!!!
+
+Design Considerations
+-- It is useful when you have large objects where majority of state is unchanged between instances and you can easily identify the state.
+-- A prototype registry is a class where you can register various prototypes which other code can access to clone out instances. This solves the issue
+of getting access of initial instance.
+-- very useful with composite or decorator patterns
+
+Pitfalls
+-- Usability depends on number of immutable state. An object having large number of mutable object is complicated to clone
+-- In java, the default clone operation will only perform the shallow copy if you need a deep copy, you have to implement it.
+
+
+SINGLETON DESIGN PATTERN (most used design pattern out there)
+
+A singleton class has only one instance, accesible globally through a single point (via method/field)
+Only one instance of that class in entire code
+Any state you add in your singleton becomes part of "global state" of your application
+
+getInstance() inside UML
+
+Implementation steps
+controlling instance creation
+class constructor must not be accerssible to the world
+subclassing/inheritance must not be allowed
+keep track of that instance
+giving access to that instance
+a public static method is a good choice
+as final public static field as well (but won't work for all singleton implementations)
+
+Two options for implementing a singleton
+Early Init - Eager singleton
+Create singleton as soon as the class is loaded
+Lazy Init - Lazy singleton
+Singleton only created when someone asks for it!!!
+
+Implementation and Design Considerations
+-- Eager init is the simplest and always try to use this approach
+-- the "classic" singleton pattern implementation uses double check locking and volatile field
+-- The lazy initialization holder idiom provides best of both worlds, you don't deal with synchronisation issues and is easy
+	to implement
+-- You can also implement using enums. However due to pre-conceptions about what an enum is, it may be hard to sell
+	during code reviews with mutable fields.
+-- If simple solutions works, go for it
+-- just class reference is enough for eager init to take place, if class is not referred anywhere then even jvm might not load the static class
+
+Design Considerations
+-- Single creations does not need any parameters. if you find yourself at that position, think of using factory or simple factory design pattern
+-- They do not carry around a lot of mutable global state.
+
+Real World Example to Explore
+-- public class Runtime { }
+
+Pitfalls
+-- hard to mock unit test
+-- Very Imp - Most common way is to implement through static, which are held per class loader and not per JVM.
+	So they may not truly be singleton in an OSGI or webapplication
+-- A singleton with a lot of mutable state is an good indication that you are abusing Singleton Pattern.
+-- Having a mutable global state is BAD BAD DESIGN PRACTISE (NOT AT ALL RECOMMENDED)
+
+UseCases
+-- Loggiing frameworks and Spring uses these concepts heavily (beans creation)
+
+
+
+OBJECT POOL
+-- In our system if cost of creating an instance of a class is high and we need large number of objects of this class
+	for short duration, then we can use object pool
+-- Alright, imagine you have a bunch of toys to play with, but some of them take a bit of time to set up before you can play. Instead of spending time setting up each toy every time you want to play, you decide to keep them all ready to play with at all times.
+	So, you put all your toys in a special box called an "object pool". Whenever you want to play with a toy, you simply take one from the box. When you're done playing with it, you put it back into the box so it's ready for someone else to play with later.
+	In computer programming, an object pool works in a similar way. It's like a storage area where you keep a bunch of objects (like toys) that are ready to be used. Instead of creating new objects every time you need one, you take an object from the pool. When you're done using it, you return it to the pool so it can be reused later. This helps save time and resources because you don't have to keep creating and destroying objects all the time.
+-- here we either pre-create objects or collect unused instance in an memory cache.
+-- ONE OF THE MOST COMPLICATED ONES TO IMPLEMENT
+
+Implementations Steps
+-- We start by creating class for object pool
+	A thread safe caching of objects should be done in the pool
+	Methods to acquire and release objects should be provided & pool should reset cached objects before giving them out
+-- The reusable object must provide methods to reset its state upon "release"
+-- we have to decide whether to create a new pooled object when pool is empty or to wait until an object becomes available
+
+Implementation Considerations
+-- Resetting object should not be a costly operations otherwise, end up losing performance savings (if reset > creation time -> then what is the point bro, just create a new object everytime)
+-- Pre-caching objects; meaning objects in advance can be helpful as it won't slow down the code, it may cause startup time and memory consumption
+-- avoid resetting in synchronised context
+
+Design Considerations
+-- You can use one single Object pool for storing object of different classes
+-- it can be parameterized to cache & return mutliple objects and the acquire method provide selection criteria
+-- ONLY USEFUL - costly initialization of objects, or running out of memory (otherwise no point of using it)
+-- do not pool long lived objects, or to only save few call to new. NEGATIVE performance might be achieved
+
+Real world example
+-- not used for saving memory and all, hardware is super strong now
+-- still very common pattern among threads and connections types of scenarios
+-- Java.concurrent.ThreadPoolExecutor ( you use ExecutorService interface indirectly )
+-- dbcp library for database connection pooling - pools database connections (spring bean something)
+
+Pitfalls
+-- successful implementation depends on the client code (insane). Releasing objects back to the pool can be vital for
+	correct working.
+-- Resetting should be faster - hence not optimal in all cases
+-- client code & reusable object both need to be aware of object pool (CHANGES IN BOTH OF THEM)
+-- you have to decide what happens when object pool is empty, and demand is there. Waiting can have severe negative impact on performance
+
+
+ABSTRACT FACTORY
+-- It is used when we have two or more objects which work together forming a kit or set and there can be multiple sets or kits that can be created by client code.
+-- So in this we seperate client code from concrete objects forming such a set and also from the code which creates these sets
+
+Implementation steps
+-- We start by studying the product "sets"
+	create abstract factory as an abstract class or interface
+	abstract factory defines abstract methods for creating products
+	provide concrete impelementation of factory for each set of products
+-- Abstract factory makes use of factory method pattern. You can think of abstract factory as an object with multiple
+	factory methods
+
+Implementations Considerations
+-- Factories can be implmented as singletons, we typically every need only one instance of it anyways. (do know about drawbacks of singleton)
+-- Adding a new product type requires changes in the base facotry and all its implementations
+-- We PROVIDE the client code with concrete factory so that it can create objects
+
+Design Considerations
+-- It uses factory method pattern inside
+-- If objects are expensive to create then you can transaparently switch factory implementations to use prototype design pattern to create objects.
+
+Real World Example
+-- DocuementBuilderFactory - amazing example, changes the factory returned on the basis of the system configs and stuff
+	rather than use providing which factory to use, it automatically detects and and starts working
+
+Pitfalls
+-- A lot more complex to implement than any other method
+-- new product addition requires changes in the entire implementation
+-- starts out as a factory method, than converts to abstract method
+-- Very specific usecase - "product families"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
